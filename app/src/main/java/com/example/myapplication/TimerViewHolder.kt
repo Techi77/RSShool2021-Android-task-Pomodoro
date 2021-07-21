@@ -30,6 +30,7 @@ class TimerViewHolder(
     private fun initButtonsListeners(timer: Timer) {
         binding.startStopButton.setOnClickListener {
             if (timer.isStarted) {
+                this.timer2?.cancel()
                 listener.stop(timer.id, timer.currentMs)
             } else {
                 listener.start(timer.id)
@@ -76,8 +77,9 @@ class TimerViewHolder(
 
             override fun onFinish() {
                 binding.timerTextview.text = timer.initMs.displayTime()
+                timer.currentMs = timer.initMs
+                timer.isStarted=false
                 stopTimer()
-                //binding.timerCardView.setCardBackgroundColor(Color.RED)
                 binding.timerCardView.setCardBackgroundColor(Color.rgb(149,52,62))
             }
         }
