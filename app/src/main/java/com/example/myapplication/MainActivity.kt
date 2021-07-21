@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity(), TimerListener {
             val timerTime = timerInputMinutes.toLong() * 60 * 1000
             timers.add(Timer(nextId++, timerTime, false, timerTime, false))
             timerAdapter.submitList(timers.toList())
-            timerAdapter.notifyItemInserted(timers.size - 1)
+            //timerAdapter.notifyItemInserted(timers.size - 1)
         }
     }
 
