@@ -18,6 +18,8 @@ class TimerViewHolder(
 
     fun bind(timer: Timer) {
         binding.timerTextview.text = timer.currentMs.displayTime()
+        binding.customView.setPeriod(timer.initMs)
+        binding.customView.setCurrent(timer.initMs-timer.currentMs)
 
         if (timer.isStarted) {
             startTimer(timer)
@@ -71,11 +73,15 @@ class TimerViewHolder(
             val interval = UNIT_ONE_SECOND
 
             override fun onTick(millisUntilFinished: Long) {
+                binding.customView.setPeriod(timer.initMs)
+                binding.customView.setCurrent(timer.initMs-timer.currentMs)
                 timer.currentMs = timer.currentMs - interval
                 binding.timerTextview.text = timer.currentMs.displayTime()
             }
 
             override fun onFinish() {
+                binding.customView.setPeriod(timer.initMs)
+                binding.customView.setCurrent(timer.currentMs)
                 binding.timerTextview.text = timer.initMs.displayTime()
                 timer.currentMs = timer.initMs
                 timer.isStarted=false
