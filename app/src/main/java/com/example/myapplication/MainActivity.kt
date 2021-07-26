@@ -1,19 +1,23 @@
 package com.example.myapplication
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.myapplication.databinding.ActivityMainBinding
 
 @SuppressLint("StaticFieldLeak")
-class MainActivity : AppCompatActivity(), TimerListener {
+class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
     private lateinit var binding: ActivityMainBinding
 
     private val timerAdapter = TimerAdapter(this) // для отображения данных в RecyclerView
     private val timers = mutableListOf<Timer>() //переменная, в которую мы будем закидывать данные конкретного таймера
     private var nextId = 0 //для выбора определённого таймера
+
+    private var startTime = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,6 +41,15 @@ class MainActivity : AppCompatActivity(), TimerListener {
             val timerTime = timerInputMinutes.toLong() * 60 * 1000 //перевод минут в милисекунды
             timers.add(Timer(nextId++, timerTime, false, timerTime, false)) //добавление данных в массив
             timerAdapter.submitList(timers.toList()) //добавление таймера
+
+            //startTime = System.currentTimeMillis()
+            ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+//            lifecycleScope.launch(Dispatchers.Main) {
+//                while (true) {
+//                    binding.timerView.text = (System.currentTimeMillis() - startTime).displayTime()
+//                    delay(INTERVAL)
+//                }
+//            }
         }
     }
 
@@ -67,5 +80,21 @@ class MainActivity : AppCompatActivity(), TimerListener {
                 it.currentMs = currentMs ?: it.currentMs //сменить currentMs на новые
                 it.isStarted = isStarted//сменить состояние таймера на "запущен"
             }
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    fun onAppBackgrounded() {
+        timers.forEach { if (it.isStarted) startTime = it.currentMs + System.currentTimeMillis()}
+        val startIntent = Intent(this, ForegroundService::class.java)
+        startIntent.putExtra(COMMAND_ID, COMMAND_START)
+        startIntent.putExtra(STARTED_TIMER_TIME_MS, startTime)
+        startService(startIntent)
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun onAppForegrounded() {
+        val stopIntent = Intent(this, ForegroundService::class.java)
+        stopIntent.putExtra(COMMAND_ID, COMMAND_STOP)
+        startService(stopIntent)
     }
 }

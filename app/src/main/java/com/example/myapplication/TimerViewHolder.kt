@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.graphics.drawable.AnimationDrawable
 import android.os.CountDownTimer
 import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.databinding.StopwatchItemBinding
 
@@ -22,9 +23,11 @@ class TimerViewHolder(
         binding.customView.setCurrent(timer.initMs-timer.currentMs)//ввод актуальных данных для отображения customView
         if (timer.isEnded){
             binding.timerCardView.setCardBackgroundColor(Color.rgb(149,52,62)) //задать строке тёмно-красный цвет
+            binding.customView.isVisible = false
         }
         else{
             binding.timerCardView.setCardBackgroundColor(Color.WHITE)
+            binding.customView.isVisible = true
         }
 
         if (timer.isStarted) {
@@ -77,12 +80,12 @@ class TimerViewHolder(
     }
 
     private fun getCountDownTimer(timer: Timer): CountDownTimer {
-        return object : CountDownTimer(timer.currentMs, UNIT_ONE_SECOND) {
+        return object : CountDownTimer(timer.currentMs, UNIT_ONE_MILLISECOND) {
 
             override fun onTick(millisUntilFinished: Long) { //функция каждого тика таймера
                 binding.customView.setPeriod(timer.initMs) //задать период таймера для customView
                 binding.customView.setCurrent(timer.initMs-timer.currentMs) //задать актуальное время для customView
-                timer.currentMs = timer.currentMs - UNIT_ONE_SECOND //уменьшить актуальное время на период
+                timer.currentMs = timer.currentMs - UNIT_ONE_MILLISECOND //уменьшить актуальное время на период
                 binding.timerTextview.text = timer.currentMs.displayTime() //поменять текстовое отображение времени на экране
             }
 
