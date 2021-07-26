@@ -11,9 +11,9 @@ import com.example.myapplication.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity(), TimerListener {
     private lateinit var binding: ActivityMainBinding
 
-    private val timerAdapter = TimerAdapter(this)
-    private val timers = mutableListOf<Timer>()
-    private var nextId = 0
+    private val timerAdapter = TimerAdapter(this) // для отображения данных в RecyclerView
+    private val timers = mutableListOf<Timer>() //переменная, в которую мы будем закидывать данные конкретного таймера
+    private var nextId = 0 //для выбора определённого таймера
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,44 +26,46 @@ class MainActivity : AppCompatActivity(), TimerListener {
             adapter = timerAdapter
         }
 
+        //функция по добавлению нового таймера по клику "добавить"
         binding.addNewTimerButton.setOnClickListener {
             val timerInputMinutes = binding.editTime.text.toString()
-            if (timerInputMinutes.isEmpty()) {
+            if (timerInputMinutes.isEmpty() || timerInputMinutes.toInt() == 0) {
                 Toast.makeText(applicationContext, "Введите данные!", Toast.LENGTH_SHORT)
                     .show()
                 return@setOnClickListener
             }
-            val timerTime = timerInputMinutes.toLong() * 60 * 1000
-            timers.add(Timer(nextId++, timerTime, false, timerTime, false))
-            timerAdapter.submitList(timers.toList())
+            val timerTime = timerInputMinutes.toLong() * 60 * 1000 //перевод минут в милисекунды
+            timers.add(Timer(nextId++, timerTime, false, timerTime, false)) //добавление данных в массив
+            timerAdapter.submitList(timers.toList()) //добавление таймера
         }
     }
 
+    //старт работы таймера
     override fun start(id: Int) {
-        timers.forEach { if (it.isStarted) it.isStarted = false}
-        changeTimer(id, null, true)
-        timerAdapter.submitList(timers.toList())
-        timerAdapter.notifyDataSetChanged()
+        timers.forEach { if (it.isStarted) it.isStarted = false} //Запущен ли какой-нибудь другой таймер? Если да - сменить на "не запущен"
+        changeTimer(id, null, true) //сменить currentMs по таймеру на null, поставить, что таймер запущен
+        timerAdapter.submitList(timers.toList()) // загрузить новые данные в адаптер
+        timerAdapter.notifyDataSetChanged() //Он сообщает ListView , что данные были изменены; и чтобы показать новые данные, ListView должен быть перерисован.
     }
 
     override fun stop(id: Int, currentMs: Long) {
-        changeTimer(id, currentMs, false)
+        changeTimer(id, currentMs, false) //сменяет статус таймера на "не запущен"
         timerAdapter.notifyDataSetChanged()
     }
 
     override fun delete(id: Int) {
-        timers.remove(timers.find { it.id == id })
+        timers.remove(timers.find { it.id == id }) // удалить таймер
         timerAdapter.submitList(timers.toList())
         timerAdapter.notifyDataSetChanged()
     }
 
+    //функция перехода к другому таймеру
     private fun changeTimer(id: Int, currentMs: Long?, isStarted: Boolean) {
         timers
-            .find { it.id == id }
+            .find { it.id == id } //найти нужный таймер
             ?.let {
-                it.currentMs = currentMs ?: it.currentMs
-                it.isStarted = isStarted
-                it.isAlarm = false
+                it.currentMs = currentMs ?: it.currentMs //сменить currentMs на новые
+                it.isStarted = isStarted//сменить состояние таймера на "запущен"
             }
     }
 }
