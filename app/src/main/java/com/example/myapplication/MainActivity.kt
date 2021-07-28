@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onAppBackgrounded() {
-        timers.forEach {
+        timers.forEach { //в случае если нет запущенных таймеров сервис не сработает
             if (it.isStarted) {
                 startTime = it.currentMs + System.currentTimeMillis()
                 val startIntent = Intent(this, ForegroundService::class.java)
