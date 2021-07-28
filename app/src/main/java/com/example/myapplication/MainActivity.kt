@@ -42,14 +42,7 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
             timers.add(Timer(nextId++, timerTime, false, timerTime, false)) //добавление данных в массив
             timerAdapter.submitList(timers.toList()) //добавление таймера
 
-            //startTime = System.currentTimeMillis()
             ProcessLifecycleOwner.get().lifecycle.addObserver(this)
-//            lifecycleScope.launch(Dispatchers.Main) {
-//                while (true) {
-//                    binding.timerView.text = (System.currentTimeMillis() - startTime).displayTime()
-//                    delay(INTERVAL)
-//                }
-//            }
         }
     }
 
@@ -84,11 +77,15 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onAppBackgrounded() {
-        timers.forEach { if (it.isStarted) startTime = it.currentMs + System.currentTimeMillis()}
-        val startIntent = Intent(this, ForegroundService::class.java)
-        startIntent.putExtra(COMMAND_ID, COMMAND_START)
-        startIntent.putExtra(STARTED_TIMER_TIME_MS, startTime)
-        startService(startIntent)
+        timers.forEach {
+            if (it.isStarted) {
+                startTime = it.currentMs + System.currentTimeMillis()
+                val startIntent = Intent(this, ForegroundService::class.java)
+                startIntent.putExtra(COMMAND_ID, COMMAND_START)
+                startIntent.putExtra(STARTED_TIMER_TIME_MS, startTime)
+                startService(startIntent)
+            }
+        }
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)

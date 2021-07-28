@@ -23,11 +23,11 @@ class TimerViewHolder(
         binding.customView.setCurrent(timer.initMs-timer.currentMs)//ввод актуальных данных для отображения customView
         if (timer.isEnded){
             binding.timerCardView.setCardBackgroundColor(Color.rgb(149,52,62)) //задать строке тёмно-красный цвет
-            binding.customView.isVisible = false
+            binding.fullCustomView.isVisible = true
         }
         else{
             binding.timerCardView.setCardBackgroundColor(Color.WHITE)
-            binding.customView.isVisible = true
+            binding.fullCustomView.isVisible = false
         }
 
         if (timer.isStarted) {
@@ -64,8 +64,6 @@ class TimerViewHolder(
         this.timer2 = getCountDownTimer(timer) //запуск функции getCountDownTimer
         this.timer2?.start() //запуск подсчёта времени таймера
 
-        //if (timer.isStarted) {binding.timerCardView.setCardBackgroundColor(Color.WHITE)} //установить белый цвет заливки строчки таймера
-
         binding.blinkingIndicator.isInvisible = false //выключить видимость blinkingIndicator
         (binding.blinkingIndicator.background as? AnimationDrawable)?.start() //старт анимации точки
     }
@@ -90,14 +88,13 @@ class TimerViewHolder(
             }
 
             override fun onFinish() {
-                binding.customView.setPeriod(timer.initMs)//задать период таймера для customView
-                binding.customView.setCurrent(timer.currentMs)//задать период таймера для customView
                 binding.timerTextview.text = timer.initMs.displayTime()//поменять текстовое отображение времени на экране
                 timer.currentMs = timer.initMs //вернуть первоначальное значение таймера
                 timer.isEnded = true //таймер закончил работу, так что задаём статус "отработал"
                 timer.isStarted=false //таймер закончил работу, так что задаём статус "не запущен"
                 stopTimer() //запуск функции "stopTimer"
                 binding.timerCardView.setCardBackgroundColor(Color.rgb(149,52,62)) //задать строке тёмно-красный цвет
+                binding.fullCustomView.isVisible = true
             }
         }
     }
