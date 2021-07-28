@@ -3,7 +3,6 @@ package com.example.myapplication
 import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.AnimationDrawable
-import android.os.CountDownTimer
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
@@ -13,15 +12,47 @@ class TimerViewHolder(
     private val binding: StopwatchItemBinding,
     private val listener: TimerListener,
     private val resources: Resources
-) : RecyclerView.ViewHolder(binding.root) {
+) : RecyclerView.ViewHolder(binding.root), TickTackListener {
 
-    private var timer2: CountDownTimer? = null
+    private  var _currentTimer: Timer? = null
+    private  val currentTimer: Timer get() = _currentTimer!!
 
     fun bind(timer: Timer) {
-        binding.timerTextview.text = timer.currentMs.displayTime()//записать в TextView актуальные данные через функцию displayTime(Utils)
-        binding.customView.setPeriod(timer.initMs) //ввод периода для отображения customView
-        binding.customView.setCurrent(timer.initMs-timer.currentMs)//ввод актуальных данных для отображения customView
-        if (timer.isEnded){
+        if (_currentTimer != null){
+            if(timer != _currentTimer) {
+                _currentTimer?.isAttached = false
+                _currentTimer = timer
+            }
+        } else {
+            _currentTimer = timer
+        }
+        timer.listener = this
+        updateFields()
+        initButtonsListeners(timer)
+    }
+
+    //Функция обработки кнопки START/STOP
+    private fun initButtonsListeners(timer: Timer) {
+        binding.startStopButton.setOnClickListener {
+            if (timer.isStarted) {
+
+                listener.stop(timer.id, timer.currentMs) //запуск функции "стоп"
+
+            } else {
+
+                listener.start(timer.id)//запуск функции "старт"
+            }
+        }
+        binding.deleteButton.setOnClickListener {
+            listener.delete(timer.id)//запуск функции "удалить"
+        }
+    }
+
+    override fun updateFields() {
+        binding.timerTextview.text = currentTimer.currentMs.displayTime()//записать в TextView актуальные данные через функцию displayTime(Utils)
+        binding.customView.setPeriod(currentTimer.initMs) //ввод периода для отображения customView
+        binding.customView.setCurrent(currentTimer.initMs-currentTimer.currentMs)//ввод актуальных данных для отображения customView
+        if (currentTimer.isEnded){
             binding.timerCardView.setCardBackgroundColor(Color.rgb(149,52,62)) //задать строке тёмно-красный цвет
             binding.fullCustomView.isVisible = true
         }
@@ -30,72 +61,41 @@ class TimerViewHolder(
             binding.fullCustomView.isVisible = false
         }
 
-        if (timer.isStarted) {
-            startTimer(timer) //если таймер запущен, запустить функцию "startTimer", с данными переменной timer
+        if (currentTimer.isStarted) {
+            binding.blinkingIndicator.isInvisible = false
+            (binding.blinkingIndicator.background as? AnimationDrawable)?.start()
+
+            binding.startStopButton.text = resources.getString(R.string.stop)
         } else {
-            stopTimer()//иначе запустить функцию "stopTimer"
-        }
-        initButtonsListeners(timer)
-    }
-
-    //Функция обработки кнопки START/STOP
-    private fun initButtonsListeners(timer: Timer) {
-        binding.startStopButton.setOnClickListener {
-            if (timer.isStarted) {
-                this.timer2?.cancel() //останавливает подсчёт времени таймера
-                listener.stop(timer.id, timer.currentMs) //запуск функции "стоп"
-            } else {
-                timer.isEnded = false //таймер закончил работу, так что задаём статус "отработал"
-                listener.start(timer.id)//запуск функции "старт"
-            }
-        }
-        binding.deleteButton.setOnClickListener {
-            if (timer.isStarted) {
-                this.timer2?.cancel()//останавливает подсчёт времени таймера
-            }
-            listener.delete(timer.id)//запуск функции "удалить"
+            binding.blinkingIndicator.isInvisible = true
+            (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()
+            binding.startStopButton.text = resources.getString(R.string.start)
         }
     }
 
-    private fun startTimer(timer: Timer) {
-        binding.startStopButton.text = resources.getString(R.string.stop)//поменять текст кнопки на "СТОП"
-
-        this.timer2?.cancel()//останавливает подсчёт времени таймера
-        this.timer2 = getCountDownTimer(timer) //запуск функции getCountDownTimer
-        this.timer2?.start() //запуск подсчёта времени таймера
-
-        binding.blinkingIndicator.isInvisible = false //выключить видимость blinkingIndicator
-        (binding.blinkingIndicator.background as? AnimationDrawable)?.start() //старт анимации точки
+    override fun makeFinalNotification() {
+        listener.makeFinalNotification()
     }
 
-    private fun stopTimer() {
-        binding.startStopButton.text = resources.getString(R.string.start) //поменять текст кнопки на "СТАРТ"
+//    private fun startTimer(timer: Timer) {
+//        binding.startStopButton.text = resources.getString(R.string.stop)//поменять текст кнопки на "СТОП"
+//
+//        this.timer2?.cancel()//останавливает подсчёт времени таймера
+//        this.timer2 = getCountDownTimer(timer) //запуск функции getCountDownTimer
+//        this.timer2?.start() //запуск подсчёта времени таймера
+//
+//         //выключить видимость blinkingIndicator
+//        (binding.blinkingIndicator.background as? AnimationDrawable)?.start() //старт анимации точки
+//    }
+//
+//    private fun stopTimer() {
+//        binding.startStopButton.text = resources.getString(R.string.start) //поменять текст кнопки на "СТАРТ"
+//
+//        this.timer2?.cancel()//останавливает подсчёт времени таймера
+//
+//        binding.blinkingIndicator.isInvisible = true//включить видимость blinkingIndicator
+//        (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()//стоп анимации точки
+//    }
 
-        this.timer2?.cancel()//останавливает подсчёт времени таймера
 
-        binding.blinkingIndicator.isInvisible = true//включить видимость blinkingIndicator
-        (binding.blinkingIndicator.background as? AnimationDrawable)?.stop()//стоп анимации точки
-    }
-
-    private fun getCountDownTimer(timer: Timer): CountDownTimer {
-        return object : CountDownTimer(timer.currentMs, UNIT_ONE_MILLISECOND) {
-
-            override fun onTick(millisUntilFinished: Long) { //функция каждого тика таймера
-                binding.customView.setPeriod(timer.initMs) //задать период таймера для customView
-                binding.customView.setCurrent(timer.initMs-timer.currentMs) //задать актуальное время для customView
-                timer.currentMs = timer.currentMs - UNIT_ONE_MILLISECOND //уменьшить актуальное время на период
-                binding.timerTextview.text = timer.currentMs.displayTime() //поменять текстовое отображение времени на экране
-            }
-
-            override fun onFinish() {
-                binding.timerTextview.text = timer.initMs.displayTime()//поменять текстовое отображение времени на экране
-                timer.currentMs = timer.initMs //вернуть первоначальное значение таймера
-                timer.isEnded = true //таймер закончил работу, так что задаём статус "отработал"
-                timer.isStarted=false //таймер закончил работу, так что задаём статус "не запущен"
-                stopTimer() //запуск функции "stopTimer"
-                binding.timerCardView.setCardBackgroundColor(Color.rgb(149,52,62)) //задать строке тёмно-красный цвет
-                binding.fullCustomView.isVisible = true
-            }
-        }
-    }
 }
