@@ -7,4 +7,5 @@ interface TimerListener {
     fun stop(id: Int, currentMs: Long)//функция паузы таймера
 
     fun delete(id: Int)//функция удаления таймера
+    fun makeFinalNotification()
 }

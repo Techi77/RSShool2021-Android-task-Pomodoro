@@ -2,8 +2,12 @@ package com.example.myapplication
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.media.Ringtone
+import android.media.RingtoneManager
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,7 +20,7 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
     private val timerAdapter = TimerAdapter(this) // для отображения данных в RecyclerView
     private val timers = mutableListOf<Timer>() //переменная, в которую мы будем закидывать данные конкретного таймера
     private var nextId = 0 //для выбора определённого таймера
-
+    private lateinit var notification: Ringtone
     private var startTime = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,28 +46,39 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
             timers.add(Timer(nextId++, timerTime, false, timerTime, false)) //добавление данных в массив
             timerAdapter.submitList(timers.toList()) //добавление таймера
 
-            ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         }
+        notification =
+            RingtoneManager.getRingtone(this, Uri.parse("android.resource://$packageName/raw/tududu"))
+        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
     }
 
     //старт работы таймера
     override fun start(id: Int) {
         timers.forEach { if (it.isStarted) it.isStarted = false} //Запущен ли какой-нибудь другой таймер? Если да - сменить на "не запущен"
         changeTimer(id, null, true) //сменить currentMs по таймеру на null, поставить, что таймер запущен
-        timerAdapter.submitList(timers.toList()) // загрузить новые данные в адаптер
+        //timerAdapter.submitList(timers.toList()) // загрузить новые данные в адаптер
         timerAdapter.notifyDataSetChanged() //Он сообщает ListView , что данные были изменены; и чтобы показать новые данные, ListView должен быть перерисован.
     }
 
     override fun stop(id: Int, currentMs: Long) {
         changeTimer(id, currentMs, false) //сменяет статус таймера на "не запущен"
+
         timerAdapter.notifyDataSetChanged()
     }
 
     override fun delete(id: Int) {
+        stop(id, 0)
         timers.remove(timers.find { it.id == id }) // удалить таймер
         timerAdapter.submitList(timers.toList())
-        timerAdapter.notifyDataSetChanged()
+        //timerAdapter.notifyDataSetChanged()
     }
+
+    override fun makeFinalNotification() {
+        notification.stop()
+        notification.play()
+        Toast.makeText(this, "Wake up!", Toast.LENGTH_LONG).show()
+    }
+
 
     //функция перехода к другому таймеру
     private fun changeTimer(id: Int, currentMs: Long?, isStarted: Boolean) {
@@ -72,7 +87,9 @@ class MainActivity : AppCompatActivity(), TimerListener, LifecycleObserver {
             ?.let {
                 it.currentMs = currentMs ?: it.currentMs //сменить currentMs на новые
                 it.isStarted = isStarted//сменить состояние таймера на "запущен"
+                Log.d("BBB", "${it.currentMs}")
             }
+        Log.d("AAAAAA","${timers.find{ it.id == id }?.currentMs}  ${timers.find{ it.id == id }?.isStarted}")
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)

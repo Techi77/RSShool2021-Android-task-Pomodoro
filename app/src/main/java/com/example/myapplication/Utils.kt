@@ -1,7 +1,7 @@
 package com.example.myapplication
 
 const val START_TIME = "00:00:00"
-const val UNIT_ONE_MILLISECOND = 100L
+const val UNIT_ONE_HUNDRED_MILLISECOND = 100L
 const val CHANNEL_ID = "Channel_ID"
 const val NOTIFICATION_ID = 777
 const val INVALID = "INVALID"
